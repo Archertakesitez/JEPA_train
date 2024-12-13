@@ -38,6 +38,8 @@ default_config = ProbingConfig()
 
 
 def location_losses(pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+    print("Pred shape:", pred.shape)
+    print("Target shape:", target.shape)
     assert pred.shape == target.shape
     mse = (pred - target).pow(2).mean(dim=0)
     return mse
@@ -120,6 +122,7 @@ class ProbingEvaluator:
                 ################################################################################
 
                 pred_encs = pred_encs.detach()
+                print("pred_encs shape:", pred_encs.shape)
 
                 n_steps = pred_encs.shape[0]
                 bs = pred_encs.shape[1]
@@ -128,6 +131,7 @@ class ProbingEvaluator:
 
                 target = getattr(batch, "locations").cuda()
                 target = self.normalizer.normalize_location(target)
+                print("target shape before sampling:", target.shape)
 
                 if (
                     config.sample_timesteps is not None
@@ -153,6 +157,8 @@ class ProbingEvaluator:
                     target = sampled_target_locs.cuda()
 
                 pred_locs = torch.stack([prober(x) for x in pred_encs], dim=1)
+                print("pred_locs final shape:", pred_locs.shape)
+                print("target final shape:", target.shape)
                 losses = location_losses(pred_locs, target)
                 per_probe_loss = losses.mean()
 
