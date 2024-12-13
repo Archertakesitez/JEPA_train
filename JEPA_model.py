@@ -101,6 +101,9 @@ class JEPAModel(nn.Module):
         Returns:
             predictions: Predicted latent states [B, T, D]
         """
+        print("JEPA Model - Input states shape:", states.shape)
+        print("JEPA Model - Input actions shape:", actions.shape)
+
         B, T = states.shape[:2]
 
         # Initial encoding
