@@ -75,21 +75,14 @@ def train_jepa(
 
             optimizer.zero_grad()
 
-            # Forward pass
             predictions = model(states, actions)
             targets = model.compute_target(states)
-
-            # Compute VicReg loss
             loss = vicreg_loss(predictions, targets)
 
-            # Backward pass
             loss.backward()
             optimizer.step()
-
-            # Momentum update of target network
             model.momentum_update()
 
-            # Logging
             total_loss += loss.item()
             if batch_idx % log_interval == 0:
                 progress_bar.set_postfix(
@@ -107,12 +100,13 @@ def train_jepa(
             best_loss = avg_loss
             patience_counter = 0
             best_model_state = model.state_dict().copy()
+            torch.save(best_model_state, "model_weights.pth")
+            print(f"New best model saved with loss: {avg_loss:.4f}")
         else:
             patience_counter += 1
 
         if patience_counter >= patience:
             print(f"Early stopping triggered after {epoch + 1} epochs")
-            # Restore best model
             model.load_state_dict(best_model_state)
             break
 
@@ -122,7 +116,7 @@ def train_jepa(
 def main():
     # Hyperparameters
     BATCH_SIZE = 32
-    LEARNING_RATE = 3e-4
+    LEARNING_RATE = 3e-5
     EPOCHS = 20
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
