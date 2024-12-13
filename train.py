@@ -54,9 +54,9 @@ def train_jepa(
     train_loader,
     optimizer,
     device,
-    epochs=20,
+    epochs=100,
     log_interval=10,
-    patience=3,  # Number of epochs to wait for improvement
+    patience=4,  # Number of epochs to wait for improvement
     min_delta=1e-4,  # Minimum change to qualify as an improvement
 ):
     model.train()
@@ -117,7 +117,7 @@ def main():
     # Hyperparameters
     BATCH_SIZE = 32
     LEARNING_RATE = 3e-5
-    EPOCHS = 20
+    EPOCHS = 100
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Create data loader
@@ -138,12 +138,11 @@ def main():
         optimizer=optimizer,
         device=DEVICE,
         epochs=EPOCHS,
-        patience=10,  # Stop if no improvement for 10 epochs
+        patience=4,  # Stop if no improvement for 4 epochs
         min_delta=1e-4,  # Minimum improvement threshold
     )
 
     print(f"Training finished with best loss: {best_loss:.4f}")
-    torch.save(model.state_dict(), "jepa_model.pth")
 
 
 if __name__ == "__main__":
