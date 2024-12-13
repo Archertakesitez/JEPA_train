@@ -16,27 +16,37 @@ def off_diagonal(x):
 
 
 def vicreg_loss(z1, z2, sim_coef=25.0, std_coef=25.0, cov_coef=1.0):
-    """VicReg loss computation"""
-    # Invariance loss
-    sim_loss = F.mse_loss(z1, z2)
+    """VicReg loss computation per timestep"""
+    B, T, D = z1.shape
 
-    # Variance loss
-    std_z1 = torch.sqrt(z1.var(dim=0) + 1e-04)
-    std_z2 = torch.sqrt(z2.var(dim=0) + 1e-04)
-    std_loss = torch.mean(F.relu(1 - std_z1)) + torch.mean(F.relu(1 - std_z2))
+    total_loss = 0
+    for t in range(T):
+        # Take each timestep: [B, D]
+        z1_t = z1[:, t]
+        z2_t = z2[:, t]
 
-    # Covariance loss
-    z1 = z1 - z1.mean(dim=0)
-    z2 = z2 - z2.mean(dim=0)
-    cov_z1 = (z1.T @ z1) / (z1.shape[0] - 1)
-    cov_z2 = (z2.T @ z2) / (z2.shape[0] - 1)
-    cov_loss = (
-        off_diagonal(cov_z1).pow_(2).sum() / z1.shape[1]
-        + off_diagonal(cov_z2).pow_(2).sum() / z2.shape[1]
-    )
+        # Invariance loss
+        sim_loss = F.mse_loss(z1_t, z2_t)
 
-    loss = sim_coef * sim_loss + std_coef * std_loss + cov_coef * cov_loss
-    return loss
+        # Variance loss
+        std_z1 = torch.sqrt(z1_t.var(dim=0) + 1e-04)
+        std_z2 = torch.sqrt(z2_t.var(dim=0) + 1e-04)
+        std_loss = torch.mean(F.relu(1 - std_z1)) + torch.mean(F.relu(1 - std_z2))
+
+        # Covariance loss
+        z1_t = z1_t - z1_t.mean(dim=0)
+        z2_t = z2_t - z2_t.mean(dim=0)
+        cov_z1 = (z1_t.T @ z1_t) / (z1_t.shape[0] - 1)
+        cov_z2 = (z2_t.T @ z2_t) / (z2_t.shape[0] - 1)
+        cov_loss = (
+            off_diagonal(cov_z1).pow_(2).sum() / D
+            + off_diagonal(cov_z2).pow_(2).sum() / D
+        )
+
+        loss = sim_coef * sim_loss + std_coef * std_loss + cov_coef * cov_loss
+        total_loss += loss
+
+    return total_loss / T  # Average over timesteps
 
 
 def train_jepa(model, train_loader, optimizer, device, epochs=100, log_interval=100):
