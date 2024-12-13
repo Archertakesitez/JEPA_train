@@ -1,7 +1,7 @@
 from dataset import create_wall_dataloader
 from evaluator import ProbingEvaluator
 import torch
-from models import JEPAModel
+from JEPA_model import JEPAModel
 import glob
 
 
