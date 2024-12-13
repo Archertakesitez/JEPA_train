@@ -55,7 +55,7 @@ def train_jepa(
     optimizer,
     device,
     epochs=20,
-    log_interval=100,
+    log_interval=10,
     patience=3,  # Number of epochs to wait for improvement
     min_delta=1e-4,  # Minimum change to qualify as an improvement
 ):
@@ -123,7 +123,7 @@ def main():
     # Hyperparameters
     BATCH_SIZE = 32
     LEARNING_RATE = 3e-4
-    EPOCHS = 100
+    EPOCHS = 20
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Create data loader
