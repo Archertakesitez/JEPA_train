@@ -94,17 +94,14 @@ class JEPAModel(nn.Module):
     def forward(self, states, actions):
         """
         Forward pass implementing recurrent JEPA prediction.
-
         Args:
-            states: Observations [B, T, C, H, W]
-            actions: Action sequence [B, T-1, 2]
+            states: Observations [B, 1, C, H, W]  # Only initial state
+            actions: Action sequence [B, T-1, 2]  # T-1 actions
         Returns:
-            predictions: Predicted latent states [B, T, D]
+            predictions: Predicted latent states [B, T, D]  # T total predictions
         """
-        print("JEPA Model - Input states shape:", states.shape)
-        print("JEPA Model - Input actions shape:", actions.shape)
-
-        B, T = states.shape[:2]
+        B = states.shape[0]
+        T = actions.shape[1] + 1  # Total timesteps = num_actions + 1
 
         # Initial encoding
         curr_state = self.encoder(states[:, 0])  # [B, D]
