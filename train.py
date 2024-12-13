@@ -49,8 +49,21 @@ def vicreg_loss(z1, z2, sim_coef=25.0, std_coef=25.0, cov_coef=1.0):
     return total_loss / T  # Average over timesteps
 
 
-def train_jepa(model, train_loader, optimizer, device, epochs=100, log_interval=100):
+def train_jepa(
+    model,
+    train_loader,
+    optimizer,
+    device,
+    epochs=20,
+    log_interval=100,
+    patience=3,  # Number of epochs to wait for improvement
+    min_delta=1e-4,  # Minimum change to qualify as an improvement
+):
     model.train()
+
+    best_loss = float("inf")
+    patience_counter = 0
+    best_model_state = None
 
     for epoch in range(epochs):
         total_loss = 0
@@ -86,7 +99,24 @@ def train_jepa(model, train_loader, optimizer, device, epochs=100, log_interval=
                     }
                 )
 
-        print(f"Epoch {epoch+1}, Average Loss: {total_loss/len(train_loader):.4f}")
+        avg_loss = total_loss / len(train_loader)
+        print(f"Epoch {epoch+1}, Average Loss: {avg_loss:.4f}")
+
+        # Early stopping check
+        if avg_loss < best_loss - min_delta:
+            best_loss = avg_loss
+            patience_counter = 0
+            best_model_state = model.state_dict().copy()
+        else:
+            patience_counter += 1
+
+        if patience_counter >= patience:
+            print(f"Early stopping triggered after {epoch + 1} epochs")
+            # Restore best model
+            model.load_state_dict(best_model_state)
+            break
+
+    return model, best_loss
 
 
 def main():
@@ -107,16 +137,18 @@ def main():
     # Initialize optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=LEARNING_RATE)
 
-    # Train model
-    train_jepa(
+    # Train with early stopping
+    model, best_loss = train_jepa(
         model=model,
         train_loader=train_loader,
         optimizer=optimizer,
         device=DEVICE,
         epochs=EPOCHS,
+        patience=10,  # Stop if no improvement for 10 epochs
+        min_delta=1e-4,  # Minimum improvement threshold
     )
 
-    # Save model
+    print(f"Training finished with best loss: {best_loss:.4f}")
     torch.save(model.state_dict(), "jepa_model.pth")
 
 
