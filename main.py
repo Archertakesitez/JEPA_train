@@ -67,6 +67,14 @@ def evaluate_model(device, model, probe_train_ds, probe_val_ds):
         print(f"{probe_attr} loss: {loss}")
 
 
+def location_losses(pred: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
+    print("Pred shape:", pred.shape)
+    print("Target shape:", target.shape)
+    assert pred.shape == target.shape
+    mse = (pred - target).pow(2).mean(dim=0)
+    return mse
+
+
 if __name__ == "__main__":
     device = get_device()
     probe_train_ds, probe_val_ds = load_data(device)
